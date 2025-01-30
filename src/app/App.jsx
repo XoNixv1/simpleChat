@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -14,9 +14,12 @@ import {
   limit,
   addDoc,
   Timestamp,
+  onSnapshot,
+  doc,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useCollectionData } from "react-firebase-hooks/firestore";
 import "./App.css";
 
 const firebaseConfig = {
@@ -31,13 +34,29 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const firestore = getFirestore(app);
+const db = getFirestore(app);
 
 function SignIn() {
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+      const { uid, displayName, email, photoURL } = user;
+
+      const userRef = doc(db, "users", uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        await setDoc(userRef, {
+          displayName,
+          email,
+          photoURL,
+          uid,
+          createdAt: new Date(),
+        });
+      }
     } catch (error) {
       console.error("Error", error);
     }
@@ -54,17 +73,28 @@ function SignOut() {
 
 function ChatRoom() {
   const dummy = useRef();
-  const messagesRef = collection(firestore, "messages");
+  const messagesRef = collection(db, "messages");
   const messagesQuery = query(messagesRef, orderBy("createdAt"), limit(25));
-  const [messages] = useCollectionData(messagesQuery, { idField: "id" });
+  // const [messages] = useCollectionData(messagesQuery, { idField: "id" });
+  const [messages, setMessages] = useState([]);
 
   const [formValue, setFormValue] = useState("");
   const user = auth.currentUser;
 
+  useEffect(() => {
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const messagesData = snapshot.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      setMessages(messagesData);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const sendMessage = async (e) => {
     e.preventDefault();
-
-    if (!user) return;
 
     const { uid, photoURL } = user;
 
@@ -103,7 +133,7 @@ function ChatRoom() {
 
 function ChatMessage({ message }) {
   const { text, uid, photoURL } = message;
-  const messageClass = uid === auth.currentUser?.uid ? "sent" : "received";
+  const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
   return (
     <div className={`message ${messageClass}`}>
@@ -119,7 +149,7 @@ function App() {
   return (
     <div className="App">
       <header>
-        <h1>Welcome to the Chat</h1>
+        <h1>chat room</h1>
       </header>
       <section>
         {user ? (
