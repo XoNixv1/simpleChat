@@ -1,14 +1,16 @@
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import addUser from "../addUser/AddUser";
-import getUsers from "./getUsers";
+import getUsers from "../getUsers/getUsers";
+import ChatRoom from "../chatRoom/ChatRoom";
 
 export default function ChatList({ user, db }) {
   const [chats, setChats] = useState([]);
   const [users, setUsers] = useState([]);
-  const [error, setError] = useState("");
+  const [openedChat, setOpenedChat] = useState();
+  const [error, setError] = useState(""); //TODO ERROR DISPLAY
 
-  const [inputValue, setInputValue] = useState("");
+  const [addedUserEmail, setAddedUserEmail] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -43,10 +45,6 @@ export default function ChatList({ user, db }) {
     }
   }, [chats, db, user, users]);
 
-  function handleChatClick(chatId) {
-    //open the chat room
-  }
-
   return (
     <div className="chat-list">
       <label htmlFor="email">Add User</label>
@@ -54,14 +52,14 @@ export default function ChatList({ user, db }) {
         id="email"
         type="email"
         placeholder="eshkere@gmail.com"
-        value={inputValue}
+        value={addedUserEmail}
         onChange={(e) => {
-          setInputValue(e.currentTarget.value);
+          setAddedUserEmail(e.currentTarget.value);
         }}
       />
       <button
         onClick={() => {
-          addUser(user.uid, inputValue, db);
+          addUser(user.uid, addUserEmail, db);
         }}
       >
         Confirm
@@ -73,13 +71,22 @@ export default function ChatList({ user, db }) {
           const otherUserName = users[otherUserId];
 
           return (
-            <li key={chat.id}>
+            <li
+              key={chat.id}
+              onClick={() => {
+                setOpenedChat({
+                  id: chat.id,
+                  otherUser: users[otherUserId],
+                });
+              }}
+            >
               <p>{otherUserName}</p>
               <p>{chat.lastMessage}</p>
             </li>
           );
         })}
       </ul>
+      {openedChat && <ChatRoom db={db} chat={openedChat} user={user} />}
     </div>
   );
 }

@@ -1,0 +1,39 @@
+.chat-room {
+  display: flex;
+  padding: 0 2rem 0 2rem;
+  width: 50%;
+  justify-self: center;
+  flex-direction: column;
+  &__message-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    &--data {
+      font-size: 10px;
+      opacity: 0.7;
+      margin: 0;
+    }
+    &--value {
+      font-size: 16px;
+      margin: 0;
+    }
+  }
+  &__img {
+    width: 3rem;
+    height: 3rem;
+  }
+  &__sent-message,
+  &__received-message {
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  &__sent-message {
+    justify-self: start;
+  }
+  &__received-message {
+    justify-self: end;
+  }
+}

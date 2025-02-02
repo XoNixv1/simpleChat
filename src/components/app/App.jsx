@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -6,23 +6,8 @@ import {
   signInWithPopup,
   signOut,
 } from "firebase/auth";
-import {
-  getFirestore,
-  collection,
-  query,
-  orderBy,
-  limit,
-  addDoc,
-  Timestamp,
-  onSnapshot,
-  doc,
-  getDoc,
-  setDoc,
-  arrayUnion,
-  getDocs,
-} from "firebase/firestore";
-import { useAuthState } from "react-firebase-hooks/auth";
-import "./App.css";
+import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import "./App.scss";
 import ChatList from "../chatList/ChatList";
 
 const firebaseConfig = {
